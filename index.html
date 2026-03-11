@@ -383,7 +383,7 @@
                 { q: "經濟學主要研究甚麼？", options: ["A. 如何賺取更多金錢", "B. 如何分配稀缺資源以滿足人們的需求", "C. 如何預測股票市場", "D. 如何管理企業"], correct: 1, description: "✅ 經濟學核心：稀缺資源嘅配置。", hint: "💡 離不開「有限資源」VS「無限慾望」" },
                 { q: "阿明想在校園義賣會上賣他親手做的冰紅茶。他發現當天只有他一個人賣飲料時，他可以賣得比較貴；但如果旁多了好個同學也在賣果汁和汽水，他就必須賣便宜一點才會有人買。這主要說明了甚麼道理？", options: ["A. 成本很重要", "B. 競爭會影響價格", "C. 天氣熱東西好賣", "D. 手工做的東西比較貴"], correct: 1, description: "✅ 競爭者增加，價格往往下降。", hint: "💡 多人賣同一樣嘢，為搶客要減價" },
                 { q: "記帳（會計）最主要像在幫一家店做甚麼事？", options: ["A. 打掃店鋪，保持整潔", "B. 設計好看的廣告傳單", "C. 決定商品要賣多少錢", "D. 清楚記錄「錢哪裡來」和「錢花到哪裡去」"], correct: 3, description: "✅ 會計就係記錄資金流向，知錢從邊嚟、去邊。", hint: "💡 流水帳，入同出" },
-                { q: "小華想開一個飲品位。他用自己的錢買了水壺和杯子。這些水壺和杯子在記帳裡算是甚麼？", options: ["A. 他欠別人的錢", "B. 他擁有的、拿來做生意的「東西」", "C. 他赚到的利潤", "D. 他還沒付的錢"], correct: 1, description: "✅ 呢啲係做生意用嘅資產 (如設備)。", hint: "💡 屬於「資產」" },
+                { q: "小華想開一個飲品攤位。他用自己的錢買了水壺和杯子。這些水壺和杯子在記帳裡算是甚麼？", options: ["A. 他欠別人的錢", "B. 他擁有的、拿來做生意的「東西」", "C. 他賺到的利潤", "D. 他還未付的錢"], correct: 1, description: "✅ 呢啲係做生意用嘅資產 (如設備)。", hint: "💡 屬於「資產」" },
                 { q: "小華開攤位時，向哥哥借了200元買砂糖。這筆借來的200元，在記帳中代表甚麼？", options: ["A. 他擁有的資產", "B. 他自己賺的收入", "C. 他欠別人的「債務」", "D. 他自己的本錢"], correct: 2, description: "✅ 借返嚟嘅錢屬於負債，因為第時要還。", hint: "💡 欠債 = 負債" },
                 { q: "損益表的主要功能是顯示甚麼？", options: ["A. 公司未來的發展潛力", "B. 公司在特定時期內的盈利或虧損", "C. 公司在那一天有最多現金", "D. 公司的資產總值有多少"], correct: 1, description: "✅ 損益表總結一段時間收入同支出，計出賺蝕。", hint: "💡 睇吓公司賺定蝕" },
                 { q: "「會計師」和「簿記員」的工作主要區別在哪裡？", options: ["A. 簿記員負責記錄交易；會計師在此基礎上進行審計並編制財務報表", "B. 簿記員負責審計並編制財務報表；會計師負責記錄交易", "C. 只有會計師才能使用電腦軟體記帳", "D. 兩者工作內容相同"], correct: 0, description: "✅ 簿記員做紀錄，會計師分析、審計、出報表。", hint: "💡 一個記錄，一個分析／核數" },
@@ -422,6 +422,37 @@
             const scoreDisplay = document.getElementById('scoreDisplay');
             const detailDisplay = document.getElementById('detailDisplay');
             const checkAllBtn = document.getElementById('checkAllBtn');
+
+            // 統一的成績顯示函數（與「完成·看成績」共用）
+            function showScoreSummary() {
+                let correctCount = 0;
+                let totalAnswered = 0;
+
+                currentQuestions.forEach((q, idx) => {
+                    const radios = document.getElementsByName(`q${idx}`);
+                    let selectedVal = null;
+                    for (let radio of radios) {
+                        if (radio.checked) {
+                            selectedVal = radio.value;
+                            break;
+                        }
+                    }
+                    if (selectedVal !== null) {
+                        totalAnswered++;
+                        if (parseInt(selectedVal) === q.correct) correctCount++;
+                    }
+                });
+
+                if (totalAnswered < 10) {
+                    alert(`你目前只答了 ${totalAnswered} 題，請完成全部10題再看成績吧！`);
+                    return;
+                }
+
+                const wrongCount = 10 - correctCount;
+                scoreDisplay.innerText = `${correctCount} / 10`;
+                detailDisplay.innerText = `✅ 正確 ${correctCount}   ❌ 錯誤 ${wrongCount}`;
+                modal.style.display = 'flex';
+            }
 
             function renderQuiz() {
                 let html = '';
@@ -480,7 +511,6 @@
                         }
 
                         const isCorrect = (parseInt(selectedVal) === q.correct);
-                        const correctLetter = String.fromCharCode(65 + q.correct); // A,B,C,D
                         const correctText = q.options[q.correct];
 
                         if (isCorrect) {
@@ -503,42 +533,16 @@
                 renderQuiz();
             });
 
-            // 檢查全部答案：逐個click檢查按鈕
+            // 檢查全部答案：先逐題檢查（顯示即時回饋），再顯示成績總結
             checkAllBtn.addEventListener('click', () => {
                 const checkBtns = document.querySelectorAll('.check-btn');
                 checkBtns.forEach(btn => btn.click());
+                // 立即顯示總結（與「完成·看成績」邏輯相同）
+                showScoreSummary();
             });
 
-            // 顯示成績總結
-            summaryBtn.addEventListener('click', () => {
-                let correctCount = 0;
-                let totalAnswered = 0;
-
-                currentQuestions.forEach((q, idx) => {
-                    const radios = document.getElementsByName(`q${idx}`);
-                    let selectedVal = null;
-                    for (let radio of radios) {
-                        if (radio.checked) {
-                            selectedVal = radio.value;
-                            break;
-                        }
-                    }
-                    if (selectedVal !== null) {
-                        totalAnswered++;
-                        if (parseInt(selectedVal) === q.correct) correctCount++;
-                    }
-                });
-
-                if (totalAnswered < 10) {
-                    alert(`你目前只答了 ${totalAnswered} 題，請完成全部10題再看成績吧！`);
-                    return;
-                }
-
-                const wrongCount = 10 - correctCount;
-                scoreDisplay.innerText = `${correctCount} / 10`;
-                detailDisplay.innerText = `✅ 正確 ${correctCount}   ❌ 錯誤 ${wrongCount}`;
-                modal.style.display = 'flex';
-            });
+            // 完成·看成績：直接顯示總結
+            summaryBtn.addEventListener('click', showScoreSummary);
 
             closeModal.addEventListener('click', () => {
                 modal.style.display = 'none';
